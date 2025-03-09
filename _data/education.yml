@@ -1,13 +1,10 @@
 # Degree
-- degree: Bachelor of Arts, Human Rights
-  uni: Yale University
-  year: 2004 &mdash; 2008
-  awards:
-    - award: Summa Cumme Laude graduate
-  summary: If you had any meaningful roles at college, feel free to write about them here
+- degree: M.Sc. Robotics, Cognition, Intelligence
+  uni: Technical University of Munich
+  year: 2021 &mdash; 2025
+  summary: Focus Areas - Probabilistic Machine Learning, Robust Machine Learning, Foundation Models, Computer Vision, Optimisation Algorithms
 
-- degree: High School Diploma
-  uni: Springfield High School
-  year: 2004
-  award: Most likely to succeed
-  summary: You can choose to have either a single or multiple awards
+- degree: B.Eng. Electrical Engineering and Information Technology
+  uni: Ravensburg-Weingarten University of Applied Sciences
+  year: 2017 &mdash; 2021
+  summary: Focus Areas - Robot Motion Planning, Deep Learning, Computer Vision, Real-Time Systems
