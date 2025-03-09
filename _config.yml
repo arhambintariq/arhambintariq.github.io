@@ -14,7 +14,7 @@ resume_name:                    "Arham Bin Tariq"
 resume_title:                   "Graduate Student at TU Munich"
 
 # used for the contact button in _layouts/resume.html
-resume_contact_email:           "contact[at]arhambintariq.com"
+resume_contact_email:           "contact@arhambintariq.com"
 
 # the next two items are used for schema itemprops in _layouts/resume.html
 resume_contact_telephone:       "555-7334"
