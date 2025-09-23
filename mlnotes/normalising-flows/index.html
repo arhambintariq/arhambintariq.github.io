@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Introduction to Normalising Flows | Arham Bin Tariq</title>
+<meta name="keywords" content="">
+<meta name="description" content="1. Introduction
+Data x follows a probability distribution p(x). We can do two things using the distribution:
+
+Data Sampling: generate a sample $x_i$ which follows the distribution p(x).
+Density Evaluation: Given any $x_i$ compute the probability density at this point.
+
+Why do we need density evaluation?
+
+Used for model evaluation and selection, as it enables us to compare how well different models explain the observed data. Models that yield higher likelihoods for the observed data are considered better fitting. (how good is our model)
+Can be used for anomaly detection. Points that have a significantly lower probability density (lower likelihood) can be flagged as anomalies or outliers.
+Data generation and augmentation: By understanding the areas of high and low density, more diverse and representative samples can be generated.
+Understanding data distribution: Density evaluation provides insights into the data distribution itself. Allows to visualise and understand the data structure, identify modes and clusters and detect dependencies between variables.
+
+Normalising Flows Intuition: Model a complex distribution by applying a transformation on a simple distribution.
+Normalising Flows are based on change of variable formulas. It transforms a variable z into another variable x via a transformation f i.e. $f(z) = x$">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/mlnotes/normalising-flows/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.16a895607404225c756af895b486c1992f4852dc82d253c27944cc8ee52f8610.css" integrity="sha256-FqiVYHQEIlx1aviVtIbBmS9IUtyC0lPCeUTMjuUvhhA=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/mlnotes/normalising-flows/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Arham Bin Tariq (Alt + H)">Arham Bin Tariq</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="home">
+                    <span>home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/cv.pdf" title="cv">
+                    <span>cv</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/mlnotes/">Mlnotes</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Introduction to Normalising Flows
+      <span class="entry-hint" title="Draft">
+        <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 -960 960 960" fill="currentColor">
+          <path
+            d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
+        </svg>
+      </span>
+    </h1>
+    <div class="post-meta"><span title='2025-05-25 11:42:14 +0200 CEST'>May 25, 2025</span>&nbsp;·&nbsp;10 min
+
+</div>
+  </header> 
+  <div class="post-content"><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-toc" data-lang="toc"></code></pre></div><h2 id="1-introduction">1. Introduction<a hidden class="anchor" aria-hidden="true" href="#1-introduction">#</a></h2>
+<p>Data <em>x</em> follows a probability distribution <em>p(x)</em>. We can do two things using the distribution:</p>
+<ol>
+<li>Data Sampling: generate a sample $x_i$ which follows the distribution <em>p(x)</em>.</li>
+<li>Density Evaluation: Given any $x_i$ compute the probability density at this point.</li>
+</ol>
+<p>Why do we need density evaluation?</p>
+<ol>
+<li>Used for model evaluation and selection, as it enables us to compare how well different models explain the observed data. Models that yield higher likelihoods for the observed data are considered better fitting. (how good is our model)</li>
+<li>Can be used for anomaly detection. Points that have a significantly lower probability density (lower likelihood) can be flagged as anomalies or outliers.</li>
+<li>Data generation and augmentation: By understanding the areas of high and low density, more diverse and representative samples can be generated.</li>
+<li>Understanding data distribution: Density evaluation provides insights into the data distribution itself. Allows to visualise and understand the data structure, identify modes and clusters and detect dependencies between variables.</li>
+</ol>
+<p>Normalising Flows Intuition: Model a complex distribution by applying a transformation on a simple distribution.
+Normalising Flows are based on change of variable formulas. It transforms a variable <em>z</em> into another variable <em>x</em> via a transformation <em>f</em> i.e. $f(z) = x$</p>
+<p>Determinant: The local, linearised rate of volume change of a transformation.</p>
+<hr>
+<h2 id="2-change-of-variables">2. Change of variables<a hidden class="anchor" aria-hidden="true" href="#2-change-of-variables">#</a></h2>
+<p>Let $p_1(z)$ = Uniform([0, 1]). We can apply a simple affine transformation <em>f</em> (scale and shift) to this distribution to convert it to the target distribution $p_2(x)$. This means that a sample from <em>z</em> can be converted into a sample from <em>x</em> by simply applying the function $f$ to it.</p>
+<p>Now for any distribution the probability mass must integrate to 1:</p>
+<p>$\int_{0}^{1}p_1(z).dz = 1 = \int_{1}^{3} p_2(x).dx$</p>
+<p>This would also be possible if we altered the distribution in such a way that the integral is still one, but in that case the probability for each interval would not be the same as in the original distribution (e.g. if using uniform distribution). The probability should be conserved i.e. it should be the same in the input and the output space. Which is why we look at infinitesimal intervals. Probability around very small intervals in input space matches the probability around very small intervals in the the output space.</p>
+<p>To preserve the total probability, the change of $p_1(z)$ along interval $dz$ must be equivalent to the change of $p_2(x)$ along the interval $dx$:</p>
+<p>$p_1(z).\partial z = p_2(x).\partial x$</p>
+<p>We only care about the amount of change in x and not its direction. It does not matter if $f(z$) is increasing or decreasing at z, we assume the change is regardless the same. Abusing the notations leads to:</p>
+<p>$p_2(x) = p_1(z) \left| \frac {\partial z}{\partial x} \right|$</p>
+<p>The term $\left| \frac {\partial z}{\partial x} \right|$ re-normalises the probability distribution in the output space.</p>
+<p>Example:
+Consider a multivariate case with 2 variables. When we zoom into an infinitesimally small region of the given domain the initial segment would be a square with width $\partial z$.</p>
+<p>A mere shift here would not change the area at all after the transformation i.e. $p_2(x) = p_1(z)$. The normalisation term will not be needed here at all.</p>
+<p>However, multiplying this by a $[[a, b], [c, d]]$ matrix will change this square into a parallelogram.  The per-unit change in area, is the area of the parallelogram i.e. ad - bc, which is the determinant of the matrix (the linear transformation).</p>
+<p>In 3-dimensions the change in area of parallelogram becomes change in volume of a Parallelepiped, and for even higher dimensions, this becomes change in the volume of a n-parallelotope. The concept remains the same, the determinants are the amount (and direction) of volume distortion of a linear transformation, generalised to any number of dimensions.</p>
+<p>If the transformation is non-linear: Instead of a single parallelogram that tracks the distortion of any point in space, you can picture many infinitesimally small parallelograms corresponding to the amount of volume distortion for each point in the domain. Mathematically, this locally-linear change in volume is $|det(J(f^{-1}(z)))|$. Where $J(f^{-1}(x))$ is the Jacobian of the function inverse, a higher dimensional generalisation of the quantity  $\frac {\partial z}{\partial x}$ from before.</p>
+<p>The change of variables formula is hence:</p>
+<p>$p_2(x) = p_1(z) \left| \frac {\partial f^{-1}(x)}{\partial x} \right|$</p>
+<p>We have:
+$\frac {\partial f^{-1}(x)}{\partial x} = \left(\frac {\partial f(z)}{\partial z} \right)^{-1}$</p>
+<p>The transformation <em>f</em> should be valid, i.e. invertible and differentiable.</p>
+<hr>
+<h2 id="3-how-to-check-if-a-transformation-is-valid">3. How to check if a transformation is valid?<a hidden class="anchor" aria-hidden="true" href="#3-how-to-check-if-a-transformation-is-valid">#</a></h2>
+<p><strong>Check for Invertibility:</strong></p>
+<p>An invertible function (known as bijective function) must be both one-to-one (injective) and onto (surjective).</p>
+<p>Injective:
+A function $f : A \to B$ is one-to-one if different elements in the domain $A$ map to different elements in the co-domain $B$. In other words, if $f(x_1) = f(x_2)$ implies $x_1 = x_2$, then the function is injective.
+Visually this can be checked in graphs: if no horizontal line intersects the graph of the function at more that one point, then the function is injective.</p>
+<p>Surjective:
+A function is surjective if every element in the co-domain $B$ is an image of at least one element from the domain $A$. This means that the range of $f$ is equal to its co-domain. For finite sets, this can be checked by ensuring every element in $B$ has a pre-image in $A$.</p>
+<p><strong>Check for Differentiability:</strong></p>
+<ol>
+<li>The function must be defined at point a. This means that $f(a)$ exists.</li>
+<li>The function must be continuous. For $f(x)$ to be continuous at a, the following must be met: $\displaystyle \lim_{x \to a} f(x) = f(a)$
+In simpler terms, as $x$ approaches $a$, the function&rsquo;s value $f(x)$ must approach $f(a)$.</li>
+<li>The derivative of $f(x)$ at $a$ exists. The derivative exists if the following limit exists:
+$\displaystyle \lim_{h \to 0} \frac{f(a + h) - f(a)}{h}$
+This limit is known as the difference quotient, and if it yields a finite value as $h$ approaches 0, then $f(x)$ is differentiable at $a$.</li>
+</ol>
+<hr>
+<h2 id="4-stacking-transformations">4. Stacking Transformations<a hidden class="anchor" aria-hidden="true" href="#4-stacking-transformations">#</a></h2>
+<p>The change of variables formula can be applied multiple times.</p>
+<p>First variable $z_0$ is transformed by $z_1 = f_1(z_0)$
+The variable $z_{i-1}$ is transformed by $z_i = f_K(z_{K-1})$
+The last variable $z_{K-1}$ is transformed by $x = z_k = f_k(z_{K-1})$</p>
+<p>![[Pasted image 20240408152436.png]]</p>
+<p>The change of variable formula then becomes:</p>
+<p>$p_K(x) = p_0(z_0) \prod_{i=1}^{K}\left| det \left ( \frac{\partial f_{i}^{-1}(z_i)}{\partial z_i} \right )\right|$</p>
+<p>which can also be written as:</p>
+<p>$p_K(x) = p_0(z_0) \prod_{i=1}^{K}\left| det \left ( \frac{\partial f_{i}(z_{i-1})}{\partial z_{i-1}} \right )^{-1}\right|$</p>
+<p>Since optimisation is easier when working with sums and we generally consider log probabilities, e.g. when calculating maximum likelihood estimate, we can take log of the formula above:</p>
+<p>$log(p_K(x)) = log(p_0(z_0)) + \sum_{i=1}^{K}log \left | det \left ( \frac{\partial f_{i}^{-1}(z_i)}{\partial z_i} \right )\right|$</p>
+<p>Normalising Flows transform a simple distribution such as a uniform or a Gaussian Distribution in a complex one. NFs stack valid transformations to model a complex mapping between the input and output space. The input variable flows through the transformations.</p>
+<p>The change of variable formula allows to compute the distribution of the output space based on the distribution in the input space. The determinant term normalises the distribution in the output space.</p>
+<hr>
+<h2 id="5-forward-and-reverse-parametrisation">5. Forward and Reverse Parametrisation<a hidden class="anchor" aria-hidden="true" href="#5-forward-and-reverse-parametrisation">#</a></h2>
+<p>Forward Parametrisation: Use the change of variables formula to sample points from $p_2(x)$ (suited for sampling)
+Reverse Parametrisation: Use the change of variables formula to evaluate $p_2(x)$ at any point $x$ (suited for density evaluation)</p>
+<p>Efficient sampling and density evaluation (at the same time) might not be required in all applications</p>
+<p>The transformation functions are not fixed but are in some kind of parametric form e.g. $g_\phi = W^Tx+b$</p>
+<h3 id="reverse-parametrisation">Reverse Parametrisation<a hidden class="anchor" aria-hidden="true" href="#reverse-parametrisation">#</a></h3>
+<p>We parametrise the inverse transformation $g=f^{-1}$. Reverse parametrisation since we know $f^{-1}$.</p>
+<p>$g_{\phi}(x) = z$ is computable and parameter $\phi$ can be learned.</p>
+<p>The inverse $f=g^{-1}$ exists but we might not know it analytically:
+$g_{\phi}(z)=x$ might not be easily computable.</p>
+<p>In short:
+$x\to z$ is easily computable, because this is parametrised.
+$z \to x$ is hard to compute, there might not be an analytic closed form.</p>
+<p>Change of variable formula with reverse parametrisation:</p>
+<p>$p_2(x) = p_1(g_{\phi}(x)) \cdot \left |det \left ( \frac{\partial g_{\phi}(x)}{\partial x} \right )\right|$</p>
+<p>Given any point $x^{(j)}$, we can compute $p_2(x^{(j)})$.</p>
+<p><strong>Stacking:</strong></p>
+<p>We can stack transformations with reverse parametrisation.</p>
+<p>To compute the density (we go in the reverse direction):</p>
+<ol>
+<li>For any $x^{(j)}$ we can set $x^{(j)} = z_K$</li>
+<li>Compute the transformations: $z_{i-1}^{(j)} = g_{\phi_{i}}(z_{i}^{(j)})$ and $\left |det \left ( \frac{\partial g_{\phi_{i}}(z_{i}^{(j)})}{\partial (z_{i}^{(j)})} \right )\right|$</li>
+<li>Given $z_{0}^{(j)}$ we can compute $p_0(z_{0}^{(j)})$ (e.g. Gaussian or Uniform) and thus $p_K(x^{(j)})$.</li>
+</ol>
+<p>While $p_0(z)$ has a simple shape, $p_K(x)$ can capture very complex structure. This is all because of $g_\phi$</p>
+<p><strong>Why do need to compute the density?</strong></p>
+<p>Reverse Parametrisation allows to compute density and then allows to maximise density i.e. perform MLE.
+The transformation $g_\phi$ is not given but learned. We can learn this by maximising the likelihood.</p>
+<p>Given a dataset $D = {x^{(j)}}^{N}_{j=1}$ usually consisting of i.i.d. samples, find the parameters $\phi$ which best explain the data. This can be done by maximising the marginal log-likelihood.</p>
+<p>$\underset{\phi}{max}log p_\phi(D) = \underset{\phi}{max}\frac{1}{N}\sum_{x^{(j)}\in D}^{}log p_\phi (x^{(j)})$</p>
+<h3 id="forward-parametrisation">Forward Parametrisation<a hidden class="anchor" aria-hidden="true" href="#forward-parametrisation">#</a></h3>
+<p>Idea: Start from a base distribution and make it more and more complex.</p>
+<p>Parametrise the transformation $f$ that we know analytically.
+$f_\theta(z) = x$ is computable and parameter $\theta$ can be learned.</p>
+<p>$f^{-1}$ exists but we might not know it analytically i.e. $f_{\theta}^{-1}(x) = z$ might not be easily computable.</p>
+<p>Change of variables formula with forward parametrisation:</p>
+<p>$p_2(x) = p_1(z) \cdot \left |det \left ( \frac{\partial f_{\theta}(z)}{\partial z} \right )\right|^{-1}$</p>
+<p>Given a sample $z^{(j)}$ we can compute a sample $x^{(j)}\sim p_{2}(x^{(j)})$.</p>
+<p><strong>Stacking</strong></p>
+<p>We can stack transformations with forward parametrisation as well.</p>
+<p>The forward parametrisation enables sampling from the distribution $p_K(x)$.</p>
+<ol>
+<li>Sample $z_{0}^{(j)} \sim p_{0}(z_{0})$ e.g. from a Gaussian or a Uniform Distribution</li>
+<li>Compute the transformations $z_{i}^{(j)} = f_{\theta_{i}}(z_{i-1}^{(j)})$ and $\left |det \left ( \frac{\partial f_{\theta_{i}}(z_{i-1}^{(j)})}{\partial (z_{i-1}^{(j)})} \right )\right|^{-1}$</li>
+<li>For the particular sample $x^{(j)} = z_{K}^{(j)}$, we can compute $p_K(x^{(j)})$</li>
+</ol>
+<p>We only get the density for the particular sample which we are sampling at the moment. We do not get the density for any arbitrary instance.</p>
+<p>Forward Parametrisation is used for sampling, Reverse Parametrisation is used for learning.</p>
+<hr>
+<h2 id="jacobian-determinant-computation">Jacobian Determinant Computation<a hidden class="anchor" aria-hidden="true" href="#jacobian-determinant-computation">#</a></h2>
+<p>Change of variables formula involves the computation of Jacobian Determinant.
+Jacobian computation can be hard and slow.</p>
+<h4 id="diagonal-jacobian">Diagonal Jacobian<a hidden class="anchor" aria-hidden="true" href="#diagonal-jacobian">#</a></h4>
+<p>Function is applied element wise.
+Different dimensions are independent of each other and do not interact with each other (hard to get complex distributions).</p>
+<p>The Jacobian is then a diagonal matrix.</p>
+<p>The determinant is the product of the diagonal elements.
+Complexity $O(D)$</p>
+<h4 id="triangular-jacobian">Triangular Jacobian<a hidden class="anchor" aria-hidden="true" href="#triangular-jacobian">#</a></h4>
+<p>Function is not applied element wise, but more dimensions are involved:
+$g_1(x_1)$
+$g_2(x_1, x_2)$
+$g_3(x_1, x_2, x_3)$</p>
+<p>The Jacobian is a triangular matrix.</p>
+<p>The determinant is the product of the diagonal elements.
+Complexity $O(D)$</p>
+<p>Autoregressive flows use this approach.</p>
+<h4 id="full-jacobian">Full Jacobian<a hidden class="anchor" aria-hidden="true" href="#full-jacobian">#</a></h4>
+<p>The function is applied in the most general form (applied to every element)</p>
+<p>We get the full Jacobian this way.</p>
+<p>The determinant can be computed with LU Decomposition in $O(D^3)$
+det(J) = det(L) . det(U)
+where det(L) and det(U) are diagonal products</p>
+<hr>
+<h2 id="other-methods">Other Methods<a hidden class="anchor" aria-hidden="true" href="#other-methods">#</a></h2>
+<hr>
+<h2 id="notes">Notes<a hidden class="anchor" aria-hidden="true" href="#notes">#</a></h2>
+<p>For a uniform distribution within a cube, such as  $p(z) = U([0, 2]^3)$, the probability density function (PDF) remains constant throughout the defined region of the space. The region in this case is the cube where each side has a length of 2, from 0 to 2 along each of the three axes (x, y, z).</p>
+<p>To find the constant probability density  $p$ for this uniform distribution, you first calculate the volume of the cube. For a cube with each side of length 2, the volume V  is given by:
+$$ V = 2 \times 2 \times 2 = 8 $$</p>
+<p>The probability density function of a uniform distribution over a given volume is $\frac{1}{V}$. Thus, for your distribution $p(z) = U([0, 2]^3)$, the density $( p )$ is:
+$$ p = \frac{1}{8} $$</p>
+<p>Therefore, the density of the points, such as $[0, 1, \frac{1}{27}]$ or any other point within the cube, is $\frac{1}{8}$. This value implies that any point in the cube is equally likely to be chosen with a probability density of $\frac{1}{8}$ per unit volume.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+
+  </footer>
+</article>
+    </main>
+    <footer class="footer">
+    <span>© 2025 <a href='/'>Arham Bin Tariq</a></span>
+</footer></body>
+
+</html>
