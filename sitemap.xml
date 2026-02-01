@@ -2,17 +2,10 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/</loc>
-    <lastmod>2025-05-25T11:42:14+02:00</lastmod>
+    <loc>https://arhambintariq.com/</loc>
   </url><url>
-    <loc>http://localhost:1313/mlnotes/normalising-flows/</loc>
-    <lastmod>2025-05-25T11:42:14+02:00</lastmod>
+    <loc>https://arhambintariq.com/categories/</loc>
   </url><url>
-    <loc>http://localhost:1313/mlnotes/</loc>
-    <lastmod>2025-05-25T11:42:14+02:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/categories/</loc>
-  </url><url>
-    <loc>http://localhost:1313/tags/</loc>
+    <loc>https://arhambintariq.com/tags/</loc>
   </url>
 </urlset>
